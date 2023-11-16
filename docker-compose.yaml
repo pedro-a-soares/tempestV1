@@ -1,0 +1,44 @@
+version: '3.8'
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE_NAME}
+    env_file:
+      - ./.env
+    volumes:
+      - mongo:/data/db
+    ports:
+      - '6000:27017'
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis:/data
+
+  nodejs-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      MONGO_HOST: mongo  # Use the service name as the hostname
+      MONGO_PORT: 27017  # Default MongoDB port
+      REDIS_HOST: redis   # Use the service name as the hostname
+      REDIS_PORT: 6379    # Default Redis port
+    depends_on:
+      - mongo
+      - redis
+    ports:
+      - '8000:8000'
+    volumes:
+      - .:/usr/src/app  # Map the local directory to /usr/src/app in the container
+
+volumes:
+  mongo:
+  redis:
